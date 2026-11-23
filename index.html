@@ -1,30 +1,253 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1728"><title>Fiber Hustle — Idle Fiber Tech</title>
-<style>
-:root{color-scheme:dark;--bg:#0b1728;--panel:#14263d;--card:#1b3350;--line:#2c4969;--text:#ecf4ff;--muted:#adc2db;--accent:#47a2ff;--green:#48dfa3}
-*{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;margin:0;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}main{max-width:610px;margin:auto;padding:18px 13px 30px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px}.header,.section{display:flex;justify-content:space-between;align-items:center;gap:8px}.overline{font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:700}.title{font-size:24px;font-weight:800}.tag{background:var(--card);border:1px solid var(--line);padding:5px 9px;border-radius:18px;font-size:11px;white-space:nowrap}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:15px}.stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 9px}.label{color:var(--muted);font-size:12px}.value{font-size:21px;font-weight:800;margin-top:4px;overflow-wrap:anywhere}.houses{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}.house{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:75px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:24px}.house small{font-size:11px;color:var(--muted)}.job{margin:15px 0 10px}.bar{height:12px;border-radius:15px;background:#081625;overflow:hidden;border:1px solid var(--line)}.fill{height:100%;width:0;background:linear-gradient(90deg,#2597ff,#48dfa3)}.line{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin:7px 0 13px}button{font:inherit;touch-action:manipulation;cursor:pointer}button:disabled{opacity:.4}.install{width:100%;background:var(--accent);color:#061626;border:0;border-radius:12px;padding:18px 10px;font-size:17px;font-weight:800}.message{text-align:center;color:var(--muted);font-size:12px;min-height:30px;margin-top:10px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.pair .stat{background:var(--panel)}.upgrade{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:12px 10px;min-height:70px;margin-top:9px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--text);text-align:left}.left{display:flex;gap:10px;align-items:center}.emoji{font-size:24px}.uname{font-size:14px;font-weight:750}.desc{display:block;font-size:12px;color:var(--muted);margin-top:4px}.price{color:#78c1ff;font-weight:800;white-space:nowrap}.footer{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px;align-items:center}.reset{border:0;background:transparent;color:var(--muted);text-decoration:underline;padding:10px 0}.note{text-align:center;color:var(--muted);font-size:12px;margin-top:14px;line-height:1.5}
-</style></head><body><main>
-<section class="panel"><div class="header"><div><div class="overline">FIBER HUSTLE · IDLE TYCOON</div><div class="title">Neighborhood Network</div></div><span id="rank" class="tag">Rookie Tech</span></div><div class="stats"><div class="stat"><div class="label">Earnings</div><div id="cash" class="value">$0</div></div><div class="stat"><div class="label">Installed</div><div id="installed" class="value">0</div></div><div class="stat"><div class="label">Auto / min</div><div id="rate" class="value">0</div></div></div></section>
-<section class="panel"><div class="section"><strong>Today's Route</strong><span id="route" class="label"></span></div><div class="houses" id="houses"></div><div class="section job"><strong id="job"></strong><span class="tag" id="difficulty">Standard</span></div><div class="bar"><div class="fill" id="progress"></div></div><div class="line"><span id="work"></span><span id="payout"></span></div><button class="install" id="install">🔧 Install Fiber Modem</button><div id="message" class="message" aria-live="polite">Tap to run fiber, mount the ONT, and activate service.</div></section>
-<div class="pair"><div class="stat"><div class="label">Manual work / tap</div><div id="power" class="value">1</div></div><div class="stat"><div class="label">Passive work / sec</div><div id="passive" class="value">0</div></div></div>
-<section class="panel"><div class="section"><strong>Shop &amp; Skill Tree</strong><span class="tag">Permanent upgrades</span></div><div id="upgrades"></div></section>
-<div class="footer"><span id="status">Your first route is ready.</span><button id="reset" class="reset">Restart game</button></div><div class="note">Progress saves automatically on this phone. Once loaded, it works offline. Crews earn up to 8 hours of idle progress.</div>
-</main><script>
-(()=>{'use strict';const $=id=>document.getElementById(id),key='fiber-hustle-game-v1';
-const defs=[['tools','Better Tools','+1 manual work per tap',80,1.55,'🧰'],['training','Fiber Certification','+2 manual work per tap',280,1.75,'🎓'],['assistant','Hire Apprentice','+0.5 passive work/sec',150,1.6,'👷'],['crew','Installation Crew','+3 passive work/sec',950,1.65,'🚐'],['automation','Remote Provisioning','+10 passive work/sec',4500,1.7,'🖥️'],['fleet','Regional Fiber Fleet','+45 passive work/sec',18000,1.85,'🏢']];
-const jobs=[['Standard Install',10,75],['Long Fiber Drop',16,115],['Tricky Wall Fish',22,165],['Existing Wiring',12,90],['No Signal at ONT',28,210],['Easy Activation',8,65],['Attic Run',25,190],['Premium Gigabit',20,175]];
-const fresh=()=>({cash:0,installed:0,work:0,levels:{},route:0,routeNo:1,lastSaved:Date.now()});
-let s=fresh(),last=performance.now(),lastSave=Date.now();const fmt=n=>Math.floor(n).toLocaleString('en-US'),lvl=id=>Math.max(0,Math.floor(Number(s.levels[id])||0)),cost=d=>Math.ceil(d[3]*Math.pow(d[4],lvl(d[0]))/5)*5,power=()=>1+lvl('tools')+2*lvl('training'),passive=()=>.5*lvl('assistant')+3*lvl('crew')+10*lvl('automation')+45*lvl('fleet'),job=()=>jobs[(s.route+Math.floor((s.routeNo-1)*3))%jobs.length];
-const notice=t=>$('message').textContent=t;
-function complete(){let n=0;while(n<100000){const [name,need,pay]=job();if(s.work+1e-8<need)break;s.work=Math.max(0,s.work-need);s.cash+=pay;s.installed++;s.route++;n++;if(s.route>=8){s.route=0;s.routeNo++;s.cash+=350;notice('🎉 Route completed! $350 bonus paid.')}else if(n===1)notice('✓ '+name+' completed! +$'+pay)}}
-function save(){s.lastSaved=Date.now();try{localStorage.setItem(key,JSON.stringify(s))}catch(e){}}
-function render(){const [name,need,pay]=job();$('cash').textContent='$'+fmt(s.cash);$('installed').textContent=fmt(s.installed);$('rate').textContent=(passive()/need*60).toFixed(1);$('power').textContent=fmt(power());$('passive').textContent=passive().toFixed(1);$('route').textContent=s.route+' / 8 homes · Route '+s.routeNo;$('job').textContent='🏠 '+name;$('difficulty').textContent=need>20?'Complex':need<12?'Easy':'Standard';$('work').textContent=s.work.toFixed(1)+' / '+need+' work';$('payout').textContent='$'+pay+' per install';$('progress').style.width=Math.min(100,100*s.work/need)+'%';$('install').textContent='🔧 Install Fiber Modem · +'+fmt(power())+' work';$('rank').textContent=['Rookie Tech','Fiber Technician','Senior Technician','Lead Technician','Fiber Supervisor','Regional Contractor','Fiber Mogul'][Math.min(6,Math.floor(s.installed/12))];$('status').textContent='Territory '+s.routeNo+' · '+fmt(s.installed)+' installs';$('houses').innerHTML=Array.from({length:8},(_,i)=>'<div class="house"><span>'+(i<s.route?'✅':'🏠')+'</span><small>'+(i<s.route?'Online':i===s.route?'Installing':'Waiting')+'</small></div>').join('');defs.forEach(d=>{let b=$('up-'+d[0]);b.disabled=s.cash<cost(d);b.querySelector('.price').textContent='$'+fmt(cost(d));b.querySelector('.lev').textContent='Lv '+lvl(d[0])})}
-$('upgrades').innerHTML=defs.map(d=>'<button class="upgrade" id="up-'+d[0]+'"><span class="left"><span class="emoji">'+d[5]+'</span><span><span class="uname">'+d[1]+' <span class="lev"></span></span><span class="desc">'+d[2]+'</span></span></span><span class="price"></span></button>').join('');
-defs.forEach(d=>$('up-'+d[0]).addEventListener('click',()=>{let p=cost(d);if(s.cash<p)return;s.cash-=p;s.levels[d[0]]=lvl(d[0])+1;notice(d[1]+' upgraded!');save();render()}));
-$('install').addEventListener('click',()=>{s.work+=power();complete();save();render()});
-$('reset').addEventListener('click',()=>{if(!confirm('Restart Fiber Hustle and erase your progress on this phone?'))return;s=fresh();notice('New career started!');save();render()});
-try{let raw=localStorage.getItem(key);if(raw){let x=JSON.parse(raw);if(x&&Number.isFinite(x.installed)&&Number.isFinite(x.cash)){s={...fresh(),...x,levels:x.levels&&typeof x.levels==='object'?x.levels:{}};s.route=Math.max(0,Math.min(7,Math.floor(s.route)||0));s.routeNo=Math.max(1,Math.floor(s.routeNo)||1);s.work=Math.max(0,Number(s.work)||0);let idle=Math.min(28800,Math.max(0,(Date.now()-(Number(s.lastSaved)||Date.now()))/1000));if(idle>1&&passive()>0){let before=s.installed;s.work+=idle*passive();complete();notice('Welcome back! Your crews finished '+fmt(s.installed-before)+' installs while away.')}}}}catch(e){}
-render();save();setInterval(()=>{let now=performance.now(),dt=Math.min(2,Math.max(0,(now-last)/1000));last=now;if(document.hidden)return;if(passive()>0){s.work+=passive()*dt;complete();render()}if(Date.now()-lastSave>1500){lastSave=Date.now();save()}},150);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){save();return}let idle=Math.min(28800,Math.max(0,(Date.now()-s.lastSaved)/1000));if(idle>1&&passive()>0){s.work+=idle*passive();complete()}last=performance.now();save();render()});addEventListener('pagehide',save);
-})();
-</script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1729" />
+  <title>Garmise Game Arcade</title>
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg:#091423;
+      --panel:#132741;
+      --panel2:#1c395d;
+      --line:#395e86;
+      --text:#eef6ff;
+      --muted:#acc0d8;
+      --accent:#79d4ff;
+      --accent2:#ffca86;
+      --good:#90efc1;
+      --shadow:0 14px 36px rgba(0,0,0,.26);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:radial-gradient(circle at top, #17355a 0, #0d1e35 24%, var(--bg) 62%);
+      color:var(--text);
+      padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+    main{max-width:1080px;margin:0 auto;padding:16px 12px 32px}
+    .hero{
+      background:linear-gradient(180deg, rgba(28,57,93,.92), rgba(16,30,52,.96));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px 16px;
+      box-shadow:var(--shadow);
+      margin-bottom:14px;
+    }
+    .eyebrow{font-size:11px;letter-spacing:1.8px;font-weight:800;color:var(--muted);text-transform:uppercase}
+    h1{margin:4px 0 8px;font-size:30px;line-height:1.08}
+    .sub{color:var(--muted);max-width:700px}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .chip{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:14px;margin-top:14px}
+    .card{
+      background:linear-gradient(180deg, rgba(19,39,65,.96), rgba(12,24,41,.98));
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      min-height:320px;
+    }
+    .art{
+      min-height:138px;
+      display:grid;
+      place-items:center;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      position:relative;
+      overflow:hidden;
+      padding:12px;
+    }
+    .icon{font-size:58px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35))}
+    .mini{
+      width:100%;max-width:210px;aspect-ratio:1.55;border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+      padding:10px;display:grid;place-items:center;position:relative;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .title{padding:14px 14px 6px;font-size:20px;font-weight:800}
+    .tagline{padding:0 14px;color:var(--muted);font-size:12px;min-height:34px}
+    .desc{padding:8px 14px 0;color:#d9e7f5;font-size:13px;flex:1}
+    .footer{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px 14px;flex-wrap:wrap}
+    .pill{font-size:11px;color:var(--muted);border:1px solid rgba(255,255,255,.1);padding:5px 8px;border-radius:999px}
+    .play{display:inline-block;text-decoration:none;font-weight:800;background:#329bd9;color:#071421;border:1px solid #7bd8ff;padding:10px 14px;border-radius:11px}
+    .play:hover{filter:brightness(1.06)}
+    .note{margin-top:16px;color:var(--muted);font-size:12px;text-align:center}
+    .c1{background:radial-gradient(circle at 30% 20%, #2c6ea4, #162740 72%)}
+    .c2{background:radial-gradient(circle at 25% 18%, #3aa2d8, #182945 72%)}
+    .c3{background:radial-gradient(circle at 30% 20%, #6f7cff, #15223f 75%)}
+    .c4{background:radial-gradient(circle at 30% 20%, #8461ff, #151f37 75%)}
+    .c5{background:radial-gradient(circle at 30% 20%, #48c5ff, #122236 75%)}
+    .c6{background:radial-gradient(circle at 30% 20%, #8cce7f, #122236 75%)}
+    .c7{background:radial-gradient(circle at 30% 20%, #f0ad62, #1b243b 75%)}
+    .c8{background:radial-gradient(circle at 30% 20%, #ff8598, #1e2238 75%)}
+    .c9{background:radial-gradient(circle at 30% 20%, #efdd72, #18233c 75%)}
+    .bars{display:grid;gap:7px;width:100%}
+    .bar{height:16px;background:#1f446b;border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+    .bar>span{display:block;height:100%;background:linear-gradient(90deg,#65cbff,#87ffc5)}
+    .hexboard{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:100%;max-width:160px}
+    .hex{width:100%;aspect-ratio:1/.9;background:#2a4364;clip-path:polygon(25% 6%,75% 6%,100% 50%,75% 94%,25% 94%,0 50%);border:1px solid rgba(255,255,255,.08)}
+    .cubegrid,.ultgrid,.slicegrid{display:grid;gap:5px}
+    .cubegrid{grid-template-columns:repeat(3,1fr);width:140px}
+    .cubegrid div,.ultgrid div,.slicegrid div{aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:#284767;display:grid;place-items:center;font-weight:900}
+    .ultgrid{grid-template-columns:repeat(3,1fr);width:160px;padding:8px}
+    .mini3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#1d3454;padding:5px;border-radius:8px}
+    .mini3 div{width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:#2a4c72}
+    .slicegrid{grid-template-columns:repeat(4,1fr);width:170px}
+    .wire{position:absolute;inset:18px;border:1px solid rgba(255,255,255,.22);border-radius:16px;transform:skewY(-12deg)}
+    .wire::before,.wire::after{content:"";position:absolute;inset:14px;border:1px solid rgba(255,255,255,.22);border-radius:14px}
+    .wire::after{inset:28px}
+    .spark{position:absolute;font-size:26px;right:18px;top:14px}
+    .starline{position:absolute;left:14px;bottom:12px;font-size:14px;color:#ffe792}
+    @media (max-width:450px){h1{font-size:27px}.card{min-height:300px}}
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">OpenAI + Garmise homemade games</div>
+      <h1>Garmise Game Arcade</h1>
+      <div class="sub">A home page for the growing collection of weird little strategy, abstract, and idle games. Tap any card to jump straight into the game.</div>
+      <div class="legend">
+        <span class="chip">📱 mobile-friendly</span>
+        <span class="chip">🧠 strategy + puzzle experiments</span>
+        <span class="chip">🎮 playable in browser</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="art c1">
+          <div class="mini bars">
+            <div class="bar"><span style="width:78%"></span></div>
+            <div class="bar"><span style="width:54%"></span></div>
+            <div class="bar"><span style="width:89%"></span></div>
+            <div class="icon" style="position:absolute;right:18px;bottom:10px;font-size:48px">📡</div>
+          </div>
+        </div>
+        <div class="title">Fiber Hustle</div>
+        <div class="tagline">Idle game · telco edition</div>
+        <div class="desc">The original clicker about installing fiber modems and scaling up your telecom empire.</div>
+        <div class="footer"><span class="pill">classic</span><a class="play" href="./fiber-hustle-classic/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c2">
+          <div class="mini bars">
+            <div class="bar"><span style="width:66%"></span></div>
+            <div class="bar"><span style="width:92%"></span></div>
+            <div class="bar"><span style="width:46%"></span></div>
+            <div class="spark">💼</div>
+          </div>
+        </div>
+        <div class="title">Fiber Hustle 2</div>
+        <div class="tagline">Prestige, jobs, mastery</div>
+        <div class="desc">The expanded sequel with specialty progression, prestige tokens, career upgrades, and permanent mastery bonuses.</div>
+        <div class="footer"><span class="pill">idle sequel</span><a class="play" href="./v2/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c3">
+          <div class="hexboard">
+            <div class="hex"></div><div class="hex"></div><div class="hex"></div><div class="hex"></div>
+            <div class="hex"></div><div class="hex"></div><div class="hex" style="background:#3b6a9d"></div><div class="hex"></div>
+          </div>
+        </div>
+        <div class="title">Hex &amp; Claim</div>
+        <div class="tagline">Hexagonal dots and boxes</div>
+        <div class="desc">Take turns claiming edges, complete hexagons, and chain extra turns in a six-sided variation on Dots and Boxes.</div>
+        <div class="footer"><span class="pill">abstract strategy</span><a class="play" href="./hex-and-claim/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c4">
+          <div class="mini">
+            <div class="wire"></div>
+            <div class="icon">🧊</div>
+          </div>
+        </div>
+        <div class="title">Prism &amp; Claim</div>
+        <div class="tagline">3D dots and boxes</div>
+        <div class="desc">Claim edges in a lattice, complete faces and cubes, and score across a rotatable three-dimensional playing field.</div>
+        <div class="footer"><span class="pill">3D abstract</span><a class="play" href="./prism-and-claim/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c5">
+          <div class="ultgrid">
+            <div class="mini3"><div></div><div style="color:#72d2ff">×</div><div></div><div></div><div></div><div></div><div style="color:#ffbf87">○</div><div></div><div></div></div>
+            <div class="mini3"><div></div><div></div><div></div><div></div><div style="color:#72d2ff">×</div><div></div><div></div><div></div><div></div></div>
+            <div class="mini3"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div style="color:#ffbf87">○</div></div>
+          </div>
+        </div>
+        <div class="title">Ultimate Tic-Tac-Toe</div>
+        <div class="tagline">Nine boards, routed turns</div>
+        <div class="desc">A move determines which small board your opponent must play on next. Win boards to win the match.</div>
+        <div class="footer"><span class="pill">tactical classic+</span><a class="play" href="./ultimate-tic-tac-toe/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c6">
+          <div class="mini slicegrid">
+            <div style="color:#72d2ff">×</div><div></div><div></div><div></div>
+            <div></div><div style="color:#ffbf87">○</div><div></div><div></div>
+            <div></div><div></div><div style="color:#72d2ff">×</div><div></div>
+            <div></div><div></div><div></div><div style="color:#ffbf87">○</div>
+          </div>
+        </div>
+        <div class="title">3D Tic-Tac-Toe</div>
+        <div class="tagline">Play across layers</div>
+        <div class="desc">Battle through 3×3×3, 4×4×4, or 5×5×5 cubes with winning lines that run in every spatial direction.</div>
+        <div class="footer"><span class="pill">3D logic</span><a class="play" href="./3d-tic-tac-toe/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c7">
+          <div class="mini3" style="transform:scale(1.35)">
+            <div style="color:#72d2ff">×</div><div></div><div></div>
+            <div></div><div style="color:#ffbf87">○</div><div></div>
+            <div></div><div></div><div style="color:#72d2ff">×</div>
+          </div>
+          <div class="starline">regions → boards → cells</div>
+        </div>
+        <div class="title">Ultimate³</div>
+        <div class="tagline">Nested tic-tac-toe</div>
+        <div class="desc">Boards inside boards inside boards. Route your opponent through regions and cells in a 729-space strategy puzzle.</div>
+        <div class="footer"><span class="pill">mega strategy</span><a class="play" href="./ultimate-cubed/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c8">
+          <div class="mini">
+            <div class="wire"></div>
+            <div class="icon">⚔️</div>
+            <div class="spark">★</div>
+          </div>
+        </div>
+        <div class="title">Vertex Wars</div>
+        <div class="tagline">Network survival in 3D</div>
+        <div class="desc">Build and cut edges, move little people around a lattice, chase targets, and try not to get stranded.</div>
+        <div class="footer"><span class="pill">original design</span><a class="play" href="./vertex-wars/">Play</a></div>
+      </article>
+
+      <article class="card">
+        <div class="art c9">
+          <div class="mini">
+            <div class="wire"></div>
+            <div class="icon">🌀</div>
+          </div>
+        </div>
+        <div class="title">4D Tic-Tac-Toe</div>
+        <div class="tagline">Rotatable hypercube</div>
+        <div class="desc">Navigate W slices or rotate the projected hypercube and make lines across four dimensions.</div>
+        <div class="footer"><span class="pill">brain-bender</span><a class="play" href="./4d-tic-tac-toe/">Play</a></div>
+      </article>
+    </section>
+
+    <div class="note">Nine browser games, one arcade. Enjoy!</div>
+  </main>
+</body>
+</html>
