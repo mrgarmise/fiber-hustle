@@ -15,7 +15,7 @@
 const $=id=>document.getElementById(id),LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 const empty=()=>({boards:Array.from({length:9},()=>Array(9).fill(0)),owners:Array(9).fill(0),target:-1,turn:1,ended:false,winner:0,moves:0});
 let s=empty(),history=[],generation=0,timer=null,mode='bot',difficulty='normal',message='';
-function winnerOf(arr){for(let l of LINES){let a=arr[l[0]];if(a>0&&a===arr[l[1]]&&a===arr[l[2]])return a}return arr.every(v=>v!==0)?3:0}
+function winnerOf(arr){for(let l of LINES){let a=arr[l[0]];if((a===1||a===2)&&a===arr[l[1]]&&a===arr[l[2]])return a}return arr.every(v=>v!==0)?3:0}
 function openBoards(state=s){if(state.target>=0&&state.owners[state.target]===0)return [state.target];return state.owners.map((v,i)=>v===0?i:-1).filter(i=>i>=0)}
 function available(state=s){let out=[];for(const b of openBoards(state))for(let p=0;p<9;p++)if(state.boards[b][p]===0)out.push([b,p]);return out}
 const copy=state=>({boards:state.boards.map(a=>a.slice()),owners:state.owners.slice(),target:state.target,turn:state.turn,ended:state.ended,winner:state.winner,moves:state.moves});
