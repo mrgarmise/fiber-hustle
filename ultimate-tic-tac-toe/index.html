@@ -35,7 +35,7 @@ if([4].includes(p))val+=5;else if([0,2,6,8].includes(p))val+=2;
 const ours=test.boards[b];for(let line of LINES){const arr=line.map(i=>ours[i]);if(arr.filter(v=>v===2).length===2&&arr.includes(0))val+=difficulty==='easy'?3:16;if(arr.filter(v=>v===1).length===2&&arr.includes(0))val+=4}
 const possible=available(test);if(difficulty==='normal'){for(const [bb,pp] of possible){let t=copy(test);if(moveOn(t,bb,pp)){if(t.ended&&t.winner===1){val-=12000;break}if(t.owners[bb]===1&&!test.owners[bb]){val-=100;break}}}}
 if(test.target===-1)val-=4;return val}
-function chooseAI(){let actions=available();if(!actions.length)return null;actions.sort((a,b)=>evaluateMove(b[0],b[1])-evaluateMove(a[0],a[1]));return actions[0]}
+function chooseAI(){const actions=available();if(!actions.length)return null;const ranked=actions.map(action=>({action,value:evaluateMove(action[0],action[1])}));ranked.sort((a,b)=>b.value-a.value);return ranked[0].action}
 function newGame(confirmFirst=false){if(confirmFirst&&s.moves>0&&!s.ended&&!confirm('Start a new match and discard this board?'))return false;cancelBot();s=empty();history=[];message='New match started. Blue goes first.';render();return true}
 $('new').addEventListener('click',()=>newGame(true));
 $('mode').addEventListener('change',()=>{let old=mode;if(s.moves>0&&!s.ended&&!confirm('Changing opponent will start a new match. Continue?')){$('mode').value=old;return}mode=$('mode').value;newGame()});
