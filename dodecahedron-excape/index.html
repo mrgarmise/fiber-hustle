@@ -1,0 +1,261 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0a1b2b"><title>Dodecahedron: The Excape — Prototype</title><style>
+:root{color-scheme:dark;--bg:#091725;--panel:#152b41;--ink:#eff8ff;--muted:#b1cadd;--edge:#50728e;--blue:#57b6ff;--orange:#ffab61}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}main{max-width:800px;margin:0 auto;padding:12px 9px 32px}h1{font-size:24px;margin:3px 0}.eyebrow{font-weight:800;letter-spacing:1.4px;font-size:10px;color:#a7c4d9}h2{margin:0 0 8px;font-size:16px}h3{font-size:13px;margin:5px 0}.row,.bar,.buttons,.teamline{display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap}.panel{background:var(--panel);border:1px solid var(--edge);border-radius:13px;padding:11px;margin-top:10px}.muted,.help{color:var(--muted)}.tiny{font-size:11px}.pill{padding:5px 9px;border:1px solid var(--edge);border-radius:99px;background:#213d57}.teamA{color:#80caff}.teamB{color:#ffc18a}.team-current-A{border-color:var(--blue);box-shadow:inset 0 0 0 1px #57b6ff70}.team-current-B{border-color:var(--orange);box-shadow:inset 0 0 0 1px #ffab6170}button,select{font:inherit;cursor:pointer;color:var(--ink);background:#254661;border:1px solid #6087a5;border-radius:9px;padding:9px 10px;touch-action:manipulation}button:disabled{cursor:default;opacity:.42}.primary{background:#3aaae4;color:#071c2b;border-color:#96e1ff;font-weight:800}.orange{background:#6c432e;border-color:#ffb56d}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stage{position:relative;overflow:hidden;margin-top:10px;background:radial-gradient(circle at 52% 47%,#233d57,#0c1a2d 80%);border-radius:14px;border:1px solid var(--edge)}.stage svg{width:100%;height:auto;display:block;aspect-ratio:1.1;touch-action:none;user-select:none}.corner{position:absolute;top:9px;left:9px;font-size:11px;pointer-events:none;background:#0c223bda;border-radius:20px;border:1px solid #41657f;padding:5px 8px}.corner.right{left:auto;right:9px}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.controls label{display:flex;gap:7px;align-items:center;flex:1}input[type=range]{accent-color:#72c6f5;flex:1;min-width:95px}.seg{display:flex;gap:5px;flex-wrap:wrap}.seg button{flex:1;min-width:55px;padding:7px 4px}.seg button.active{background:#2f91b6;border-color:#a9e9ff;color:#071f2e;font-weight:800}.pawn-selectors{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.pawn-selectors button{padding:9px 3px;border-width:2px}.pawn-selectors button.active{outline:2px solid white;outline-offset:1px}.pawn-selectors button[data-team=A]{border-color:var(--blue)}.pawn-selectors button[data-team=B]{border-color:var(--orange)}.pawn-selectors .status{display:block;font-size:10px;color:#cbddeb}.pawn-selectors button.used{opacity:.62}.detail{background:#10263d;border:1px solid #395c78;border-radius:10px;padding:8px}.moves{display:flex;gap:6px;flex-wrap:wrap}.moves button{font-size:12px;padding:8px 10px}.moves .legal{border-color:#adf5bf;background:#204d44}.moves .blocked{border-color:#977855;background:#4d392b}.edges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.edges button{font-size:12px;min-height:46px;padding:5px}.edges .mine{border-color:var(--blue)}.edges .theirs{border-color:var(--orange)}.edges .neutral{border-color:#7793a8}.log{max-height:106px;overflow:auto;color:#c6d8e8}.log div{border-bottom:1px solid #29435a;padding:3px 0}.switch{display:flex;align-items:center;gap:7px}.switch input{accent-color:#f0b06e}.help p{margin:5px 0}.footer{text-align:center;font-size:11px;color:var(--muted);margin-top:14px}a{color:#a7dbff}@media(max-width:420px){main{padding:7px 5px 24px}.panel{padding:8px}.edges{grid-template-columns:repeat(2,minmax(0,1fr))}.pawn-selectors{gap:4px}.pawn-selectors button{font-size:12px;padding:8px 1px}button{padding:8px 7px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style></head><body><main><header class="row"><div><div class="eyebrow">GARMISE GAME ARCADE · PROTOTYPE #16</div><h1>⚽ Dodecahedron: The Excape</h1></div><span class="pill">3 shells · 96 rooms</span></header>
+<section class="panel" id="turnPanel"><div class="row"><div><div class="tiny muted">CURRENT TURN</div><strong id="turn">Blue · Round 1</strong><div class="tiny muted" id="usage">A1 ready · A2 ready</div></div><button id="endTurn" class="primary">End Team Turn →</button></div><div class="tiny muted" style="margin-top:7px">Each team's two pawns may each act once, or sit out. No action is compulsory.</div></section>
+<div class="stage" id="stage"><svg id="sphere" viewBox="0 0 760 690" role="img" aria-label="Three concentric soccer-ball shells; drag to orbit, tap a room or colored edge"></svg><span class="corner">Drag to rotate</span><span class="corner right" id="viewInfo">All shells</span></div>
+<section class="panel"><div class="controls"><label><b>Zoom</b><input id="zoom" type="range" min="45" max="240" step="5" value="100"/><span id="zoomLabel" class="tiny">100%</span></label><button id="resetCamera">Reset view</button></div><div class="seg" id="shells" style="margin-top:9px"><button data-shell="ALL" class="active">All</button><button data-shell="I">Inner</button><button data-shell="M">Middle</button><button data-shell="O">Outer</button></div><label class="switch tiny" style="margin-top:9px"><input type="checkbox" id="showRing" checked/> Highlight equatorial ring (10 connected rooms)</label></section>
+<section class="panel"><div class="row"><h2>Players · tap to select &amp; center</h2><span id="selectedName" class="pill">A1</span></div><div class="pawn-selectors" id="pawnSelectors"></div><div class="tiny muted" style="margin-top:8px">🎨 Build colors an edge · 🛡 Defend prevents enemy repainting of adjacent edges</div><div class="buttons" style="margin-top:9px"><button id="stance">Switch to 🛡 Defend</button><button id="focusRoom">Center selected pawn</button><button id="undo">↶ Undo action</button></div><div id="message" style="min-height:28px;color:#a7eccb;margin-top:8px" aria-live="polite">Welcome! Color all five edges of the starting pentagon to unlock a move.</div></section>
+<section class="panel"><div class="row"><h2>Room &amp; movement</h2><span class="pill" id="inspectId">I-P00</span></div><div id="roomDetail" class="detail"></div><h3>Move to adjoining room</h3><div class="moves" id="destinations"></div><div class="buttons" style="margin-top:8px"><button id="radial">⇧ Outward passage (locked)</button><span id="exitHint" class="tiny muted"></span></div></section>
+<section class="panel"><h2>Build · shared room edges</h2><div class="tiny muted">The highlighted edges belong to the active pawn's room. Touch one here or directly on the board.</div><div id="edgeButtons" class="edges" style="margin-top:8px"></div><div id="edgeStatus" class="tiny muted" style="margin-top:6px"></div></section>
+<section class="panel"><div class="row"><h2>Equatorial gate</h2><span id="gateStatus" class="pill">Locked</span></div><div id="ringProgress" class="tiny"></div><div class="tiny muted">Provisional: own every room in the designated connected equator cycle to open the next shell. An owned current room is still required for outward travel.</div><details style="margin-top:9px"><summary>Developer / Demo controls</summary><div class="buttons" style="margin-top:8px"><label class="switch"><input type="checkbox" id="demoUnlock"/> Demo Unlock (bypass equator only)</label><label class="tiny">Start pentagon <select id="startPentagon"></select></label><button id="newGame">New game</button></div><div class="tiny muted">Demo mode is marked in the turn status and does not grant room ownership. Starting room changes only on New Game.</div></details></section>
+<section class="panel"><div class="row"><h2>Recent actions</h2><span class="tiny muted">Local pass-and-play</span></div><div id="log" class="log"></div></section>
+<section class="panel help"><h2>Prototype rules · subject to change</h2><p>Four pawns begin in a shared inner pentagon: A1/A2 (blue) and B1/B2 (orange). Blue and orange take alternating team turns; each pawn can act once or wait. Actions: move to a neighboring face, change BUILD/DEFEND attitude, or BUILD one shared polygon edge.</p><p><b>Claim a room before leaving it.</b> A room is awarded only when every edge is colored. More colored edges wins; inner ties belong to both teams, middle ties belong to neither, and outer rooms require a two-edge lead. Defend blocks repainting an enemy-owned edge from either of its neighboring rooms, but never neutral coloring.</p><p>There are 12 pentagons and 20 hexagons per shell. IDs such as I-P00, M-H07 and O-P11 are stable even when you orbit. Breadcrumb dots persist by team, one per room, and an equatorial ownership ring opens the next shell. No monsters, traps, shell rotation, or final winner yet.</p></section>
+<div class="footer"><a href="../">Back to Garmise Game Arcade</a> · Original geometry and rules prototype</div>
+</main><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',SHELLS=['I','M','O'],RADII={I:1,M:1.42,O:1.84},TEAM_COLOR={A:'#57b6ff',B:'#ffab61'},STARTS=['A1','A2','B1','B2'],STORE='excape-board-v1',TAU=2*Math.PI;
+const phi=(1+Math.sqrt(5))/2,verts=[];
+for(const s of [-1,1])for(const t of [-1,1])verts.push([0,s,t*phi]);
+for(const s of [-1,1])for(const t of [-1,1])verts.push([s,t*phi,0]);
+for(const s of [-1,1])for(const t of [-1,1])verts.push([t*phi,0,s]);
+const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),scale=(p,n)=>p.map(v=>v*n),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=p=>scale(p,1/(Math.hypot(...p)||1)),mean=points=>scale(points.reduce((a,b)=>add(a,b),[0,0,0]),1/points.length),pad=n=>String(n).padStart(2,'0');
+const icoEdges=[];for(let u=0;u<12;u++)for(let v=u+1;v<12;v++)if(Math.abs(dot(sub(verts[u],verts[v]),sub(verts[u],verts[v]))-4)<1e-7)icoEdges.push([u,v]);
+const adjacentIco=(u,v)=>icoEdges.some(([a,b])=>a===Math.min(u,v)&&b===Math.max(u,v));
+const triangles=[];for(let u=0;u<12;u++)for(let v=u+1;v<12;v++)for(let w=v+1;w<12;w++)if(adjacentIco(u,v)&&adjacentIco(v,w)&&adjacentIco(u,w))triangles.push([u,v,w]);
+const directions=[];for(const [u,v] of icoEdges){directions.push([u,v],[v,u])}directions.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+const vertexIndex=new Map(directions.map(([u,v],i)=>[u+':'+v,i]));
+const truncVerts=directions.map(([u,v])=>scale(add(scale(verts[u],2),verts[v]),1/3));
+const radius0=Math.hypot(...truncVerts[0]);const localVertices=truncVerts.map(v=>scale(v,1/radius0));
+const faces=[];
+function makeFace(id,ids){
+ const p=ids.map(i=>localVertices[i]),n=cross(sub(p[1],p[0]),sub(p[2],p[1]));
+ if(dot(n,mean(p))<0)ids.reverse();
+ faces.push({id,ids,center:mean(ids.map(i=>localVertices[i])),edges:[],neighbors:[]});
+}
+for(let u=0;u<12;u++){
+ const near=verts.map((_,v)=>v).filter(v=>v!==u&&adjacentIco(u,v)),axis=unit(verts[u]),ref=unit(sub(verts[near[0]],verts[u])),side=unit(cross(axis,ref));
+ near.sort((a,b)=>{
+  const da=sub(verts[a],verts[u]),db=sub(verts[b],verts[u]);
+  return Math.atan2(dot(da,side),dot(da,ref))-Math.atan2(dot(db,side),dot(db,ref));
+ });
+ makeFace('P'+pad(u),near.map(v=>vertexIndex.get(u+':'+v)));
+}
+triangles.forEach(([u,v,w],i)=>makeFace('H'+pad(i),[[u,v],[v,u],[v,w],[w,v],[w,u],[u,w]].map(pair=>vertexIndex.get(pair[0]+':'+pair[1]))));
+const edgeDefs=new Map();
+for(const f of faces){for(let j=0;j<f.ids.length;j++){
+ const u=f.ids[j],v=f.ids[(j+1)%f.ids.length],key=Math.min(u,v)+':'+Math.max(u,v);
+ f.edges.push(key);if(!edgeDefs.has(key))edgeDefs.set(key,{key,ids:[u,v],faces:[]});edgeDefs.get(key).faces.push(f.id);
+}}
+const faceById=new Map(faces.map(f=>[f.id,f]));
+for(const f of faces)f.neighbors=f.edges.map(k=>edgeDefs.get(k).faces.find(id=>id!==f.id));
+const ringIndices=[4,14,6,30,31,7,22,5,29,28],ring=ringIndices.map(i=>faces[i].id);
+function assert(condition,msg){if(!condition)throw Error('Board geometry: '+msg)}
+assert(verts.length===12&&icoEdges.length===30&&triangles.length===20,'icosahedron');
+assert(localVertices.length===60&&faces.length===32&&edgeDefs.size===90,'truncated geometry');
+assert(faces.filter(f=>f.ids.length===5).length===12&&faces.filter(f=>f.ids.length===6).length===20,'face types');
+assert([...edgeDefs.values()].every(e=>e.faces.length===2),'shared-edge incidence');
+assert(faces.every(f=>f.neighbors.length===f.ids.length),'face degree');
+const reached=new Set([faces[0].id]),stack=[faces[0].id];while(stack.length)for(const id of faceById.get(stack.pop()).neighbors)if(!reached.has(id)){reached.add(id);stack.push(id)}
+assert(reached.size===32,'connected face graph');
+assert(ring.length===10&&new Set(ring).size===10&&ring.every((id,i)=>faceById.get(id).neighbors.includes(ring[(i+1)%ring.length])),'equator cycle edges');
+const az=ring.map(id=>Math.atan2(faceById.get(id).center[1],faceById.get(id).center[0]));
+const unwrap=d=>((d+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+const wind=ring.reduce((s,_,i)=>s+unwrap(az[(i+1)%ring.length]-az[i]),0)/TAU;
+assert(Math.abs(Math.abs(wind)-1)<.01,'equator must wind once');
+const globalEdge=(shell,key)=>shell+':'+key,roomId=(shell,face)=>shell+'-'+face,parseRoom=id=>({shell:id[0],face:id.slice(2)}),faceWorld=(shell,face)=>scale(faceById.get(face).center,RADII[shell]),localVertex=(shell,vid)=>scale(localVertices[vid],RADII[shell]);
+function blankGame(pent='P00'){const start=roomId('I',pent),pawns={};
+ for(const pid of STARTS)pawns[pid]={team:pid[0],room:start,attitude:'BUILD',acted:false};
+ return{version:1,team:'A',round:1,selected:'A1',inspected:start,pawns,edges:{},visits:{[start]:{A:true,B:true}},shellTransforms:{I:0,M:0,O:0},demoUnlock:false,log:['Game started · all four pawns in '+start]};}
+let state=blankGame(),camera={yaw:-.65,pitch:.36,zoom:1,target:[0,0,0]},visibleShell='ALL',showRing=true,animation=null,animCounter=0,undoHistory=[],notice='';
+const currentPawn=()=>state.pawns[state.selected],faceForPawn=()=>parseRoom(currentPawn().room),ownerColor=owner=>owner==='A'?TEAM_COLOR.A:owner==='B'?TEAM_COLOR.B:owner==='AB'?'#b6b1ff':'#63849d';
+function teamName(team){return team==='A'?'Blue':'Orange'}
+function roomsOfEdge(shell,key){return edgeDefs.get(key).faces.map(face=>roomId(shell,face))}
+function tally(id){const {shell,face}=parseRoom(id),f=faceById.get(face);let A=0,B=0;
+ for(const k of f.edges){const val=state.edges[globalEdge(shell,k)];if(val==='A')A++;if(val==='B')B++}
+ return{A,B,neutral:f.edges.length-A-B,total:f.edges.length};
+}
+function ownership(id){const counts=tally(id);if(counts.neutral)return '';
+ const diff=counts.A-counts.B,shell=id[0];
+ if(shell==='O')return diff>=2?'A':diff<=-2?'B':'';
+ if(!diff)return shell==='I'?'AB':'';
+ return diff>0?'A':'B';
+}
+function owns(id,team){return ownership(id).includes(team)}
+function visit(room,team){const r=state.visits[room]||(state.visits[room]={A:false,B:false});r[team]=true}
+function ringProgress(shell,team){const owned=ring.filter(f=>owns(roomId(shell,f),team)).length;return{owned,total:ring.length,unlocked:owned===ring.length}}
+function exitStatus(pawn=currentPawn()){const {shell,face}=parseRoom(pawn.room),next=SHELLS[SHELLS.indexOf(shell)+1];
+ if(!next)return{ok:false,why:'Already on outer shell'};
+ if(!owns(pawn.room,pawn.team))return{ok:false,why:'Claim current room first'};
+ const r=ringProgress(shell,pawn.team);
+ if(!r.unlocked&&!state.demoUnlock)return{ok:false,why:'Equator ring '+r.owned+'/'+r.total+' · locked'};
+ return{ok:true,to:roomId(next,face),why:state.demoUnlock?'Demo passage open':'Ring complete'};
+}
+function legalNeighbors(pawn=currentPawn()){const {shell,face}=parseRoom(pawn.room);return faceById.get(face).neighbors.map(f=>({room:roomId(shell,f),ok:owns(pawn.room,pawn.team),why:owns(pawn.room,pawn.team)?'':'Claim current room first'}))}
+function canAct(pawn=currentPawn()){return pawn.team===state.team&&!pawn.acted&&!animation}
+function blockedPaint(shell,key,team){if(state.edges[globalEdge(shell,key)]!== (team==='A'?'B':'A'))return false;
+ return roomsOfEdge(shell,key).some(id=>STARTS.some(pid=>{const p=state.pawns[pid];return p.team!==team&&p.attitude==='DEFEND'&&p.room===id}));
+}
+function log(s){state.log.unshift(s);state.log=state.log.slice(0,14);notice=s}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({state,camera,visibleShell,showRing,undoHistory:undoHistory.slice(-12)}))}catch(e){}}
+function remember(){undoHistory.push(JSON.stringify(state));if(undoHistory.length>25)undoHistory.shift()}
+function startAnimation(kind,from,to,player,done){
+ const version=++animCounter;animation={kind,from,to,player,progress:0};draw();
+ const started=performance.now();const ms=kind==='move'?380:kind==='stance'?235:260;
+ function frame(now){if(version!==animCounter)return;animation.progress=Math.min(1,(now-started)/ms);draw();if(animation.progress<1)requestAnimationFrame(frame);else{animation=null;done?.();render()}}
+ requestAnimationFrame(frame);
+}
+function actMove(room,radial=false){const p=currentPawn();if(!canAct(p))return message('This pawn cannot act right now.');
+ const source=p.room,{shell,face}=parseRoom(source),allowed=radial?exitStatus(p).ok:legalNeighbors(p).some(n=>n.room===room&&n.ok);
+ if(!allowed)return message(radial?exitStatus(p).why:'Claim your current room before leaving, or choose an adjoining room.');
+ remember();p.room=room;p.acted=true;visit(room,p.team);state.inspected=room;log(p.team+': '+state.selected+' moved '+source+' → '+room);
+ save();startAnimation('move',source,room,state.selected,save);render();
+}
+function actStance(){const p=currentPawn();if(!canAct(p))return message('Select an unused pawn from the current team.');
+ remember();const from=p.attitude;p.attitude=from==='BUILD'?'DEFEND':'BUILD';p.acted=true;
+ log(state.selected+' switched to '+p.attitude);save();startAnimation('stance',p.room,p.room,state.selected,save);render();
+}
+function actEdge(key){const p=currentPawn(),{shell,face}=faceForPawn();
+ if(!canAct(p))return message('Select an unused pawn on the current team.');
+ if(p.attitude!=='BUILD')return message('Switch this pawn to BUILD on a prior turn to paint edges.');
+ if(!faceById.get(face).edges.includes(key))return message('Select an edge on the pawn’s current room.');
+ const fullKey=globalEdge(shell,key),existing=state.edges[fullKey]||'';
+ if(existing===p.team)return message('That edge is already your team color.');
+ if(blockedPaint(shell,key,p.team))return message('Blocked by an opposing defender in an incident room.');
+ remember();state.edges[fullKey]=p.team;p.acted=true;
+ log(state.selected+' colored '+p.room+' shared edge '+(faceById.get(face).edges.indexOf(key)+1)+' '+teamName(p.team));
+ save();startAnimation('paint',p.room,p.room,state.selected,save);render();
+}
+function endTurn(){if(animation)return;remember();state.team=state.team==='A'?'B':'A';if(state.team==='A')state.round++;
+ for(const pid of STARTS)state.pawns[pid].acted=false;
+ if(state.pawns[state.selected].team!==state.team)state.selected=state.team==='A'?'A1':'B1';
+ state.inspected=currentPawn().room;log(teamName(state.team)+' turn · round '+state.round);save();render();
+}
+function undo(){if(animation||!undoHistory.length)return;state=JSON.parse(undoHistory.pop());log('Last action undone');save();render()}
+function message(s){notice=s;$('message').textContent=s}
+function turnCamera(p){const a=camera.yaw,b=camera.pitch,xx=p[0]*Math.cos(a)+p[2]*Math.sin(a),zz=-p[0]*Math.sin(a)+p[2]*Math.cos(a),yy=p[1]*Math.cos(b)-zz*Math.sin(b),depth=p[1]*Math.sin(b)+zz*Math.cos(b);return[xx,yy,depth]}
+function project(p){const a=turnCamera(sub(p,camera.target)),factor=135*camera.zoom;return[380+a[0]*factor,350+a[1]*factor,a[2]]}
+function node(tag,props,parent=$('sphere')){const e=document.createElementNS(NS,tag);for(const k in props)e.setAttribute(k,props[k]);parent.appendChild(e);return e}
+function polygonPoints(coords){return coords.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ')}
+function activeDrawingShell(){return visibleShell!=='ALL'?visibleShell:faceForPawn().shell}
+function highlightRooms(){const p=currentPawn();return new Map(legalNeighbors(p).map(item=>[item.room,item]))}
+function facePaint(shell,f){const id=roomId(shell,f.id),own=ownership(id),p=currentPawn(),active=p.room===id,legal=highlightRooms().get(id),isRing=ring.includes(f.id)&&showRing;
+ if(active)return{fill:'#8bd0df',opacity:.48,stroke:'#fff5ae',width:3.1};
+ if(legal?.ok)return{fill:'#6cae8c',opacity:.37,stroke:'#9ffbc2',width:2.7};
+ if(legal)return{fill:'#aa875d',opacity:.26,stroke:'#e5ab70',width:2};
+ if(own)return{fill:ownerColor(own),opacity:visibleShell==='ALL'&&shell!==activeDrawingShell()?.38:.61,stroke:isRing?'#fff4a4':'#8ca9c2',width:isRing?2.1:1.1};
+ return{fill:shell==='I'?'#5488a8':shell==='M'?'#6590aa':'#779db2',opacity:visibleShell==='ALL'?(shell===activeDrawingShell()?.19:.085):.32,stroke:isRing?'#cfbd72':'#8cb2ca',width:isRing?2:1};
+}
+function pawnWorld(pid,room){const p=state.pawns[pid],{shell,face}=parseRoom(room||p.room),center=faceWorld(shell,face);const offset={A1:[-.11,-.08,0],A2:[.11,-.08,0],B1:[-.11,.08,0],B2:[.11,.08,0]}[pid];
+ return add(scale(center,1.15),scale(offset,RADII[shell]*.7));
+}
+function drawPawn(pid,at){
+ const pawn=state.pawns[pid],center=project(at),selected=state.selected===pid,team=TEAM_COLOR[pawn.team],p=animation?.player===pid;
+ const g=node('g',{style:'cursor:pointer',opacity:1});
+ if(selected)node('circle',{cx:center[0],cy:center[1],r:24,fill:team,'fill-opacity':.11,stroke:'#fff4a8','stroke-width':2.6},g);
+ node('circle',{cx:center[0],cy:center[1]-7,r:12,fill:team,stroke:'#e7faff','stroke-width':2},g);
+ const label=node('text',{x:center[0],y:center[1]-3.1,'font-size':10,'text-anchor':'middle','font-weight':900,fill:'#10263b'},g);label.textContent=pid;
+ node('path',{d:'M'+center[0]+' '+(center[1]+5)+'v15m0 -9l-11 7m11 -7l11 7m-11 2l-7 7m7 -7l7 7',fill:'none',stroke:team,'stroke-width':3,'stroke-linecap':'round'},g);
+ const icon=node('text',{x:center[0]+15,y:center[1]+2,'font-size':15,'text-anchor':'middle'},g);icon.textContent=pawn.attitude==='BUILD'?'✎':'◆';
+ g.addEventListener('click',e=>{e.stopPropagation();selectPawn(pid,true)});
+}
+function draw(){
+ const svg=$('sphere');svg.replaceChildren();
+ const faceItems=[];
+ for(const shell of SHELLS){if(visibleShell!=='ALL'&&visibleShell!==shell)continue;
+  for(const f of faces){const points=f.ids.map(i=>project(localVertex(shell,i))),depth=project(faceWorld(shell,f.id))[2];faceItems.push({shell,f,points,depth})}
+ }
+ faceItems.sort((a,b)=>a.depth-b.depth);
+ const focusedShell=activeDrawingShell(),allowed=highlightRooms();
+ for(const item of faceItems){
+  const {shell,f,points}=item,id=roomId(shell,f.id),paint=facePaint(shell,f);
+  const poly=node('polygon',{points:polygonPoints(points),fill:paint.fill,'fill-opacity':paint.opacity,stroke:paint.stroke,'stroke-opacity':shell===focusedShell?'.75':'.28','stroke-width':paint.width,style:shell===focusedShell?'cursor:pointer':'pointer-events:none'});
+  if(shell===focusedShell)poly.addEventListener('click',e=>{e.stopPropagation();clickRoom(id)});
+  const here=state.visits[id];if(here){
+   const c=project(faceWorld(shell,f.id));
+   if(here.A)node('circle',{cx:c[0]-7,cy:c[1]+8,r:4.5,fill:TEAM_COLOR.A,stroke:'#081a2a','stroke-width':1.2,'pointer-events':'none'});
+   if(here.B)node('circle',{cx:c[0]+7,cy:c[1]+8,r:4.5,fill:TEAM_COLOR.B,stroke:'#081a2a','stroke-width':1.2,'pointer-events':'none'});
+  }
+ }
+ const {shell,face}=faceForPawn(),f=faceById.get(face);
+ if(visibleShell==='ALL'||visibleShell===shell){
+  // Draw the current pawn's room edges last, so even back-facing edges remain tappable.
+  f.edges.forEach((key,i)=>{const e=edgeDefs.get(key),a=project(localVertex(shell,e.ids[0])),b=project(localVertex(shell,e.ids[1])),owner=state.edges[globalEdge(shell,key)],stroke=owner?TEAM_COLOR[owner]:'#dcebb5';
+   node('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke,'stroke-width':6,'stroke-linecap':'round','pointer-events':'none'});
+   const hit=node('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'transparent','stroke-width':23,style:'cursor:pointer','pointer-events':'stroke'});
+   hit.addEventListener('click',evt=>{evt.stopPropagation();actEdge(key)});
+   const label=node('text',{x:(a[0]+b[0])/2,y:(a[1]+b[1])/2-5,fill:'#fff7c9','font-weight':800,'font-size':13,'text-anchor':'middle','paint-order':'stroke',stroke:'#102235','stroke-width':3,'pointer-events':'none'});label.textContent=i+1;
+  });
+ }
+ const pawnItems=[];
+ for(const pid of STARTS){const p=state.pawns[pid];if(visibleShell!=='ALL'&&p.room[0]!==visibleShell)continue;let point=pawnWorld(pid);if(animation?.kind==='move'&&animation.player===pid){point=add(scale(pawnWorld(pid,animation.from),1-animation.progress),scale(pawnWorld(pid,animation.to),animation.progress))}
+ pawnItems.push({pid,point,depth:project(point)[2]});
+ }
+ pawnItems.sort((a,b)=>a.depth-b.depth);for(const item of pawnItems)drawPawn(item.pid,item.point);
+ if(animation?.kind==='paint'||animation?.kind==='stance'){
+  const p=project(pawnWorld(animation.player)),size=12+animation.progress*37;
+  node('circle',{cx:p[0],cy:p[1],r:size,fill:'none',stroke:TEAM_COLOR[state.pawns[animation.player].team],'stroke-width':4,opacity:1-animation.progress,'pointer-events':'none'});
+ }
+}
+function clickRoom(id){state.inspected=id;const own=currentPawn().room;if(legalNeighbors().some(n=>n.room===id&&n.ok)&&canAct())actMove(id);else{if(legalNeighbors().some(n=>n.room===id))message('Claim your current room before leaving.');render()}}
+function selectPawn(pid,focus=false){if(animation)return;state.selected=pid;state.inspected=state.pawns[pid].room;if(focus){camera.target=faceWorld(parseRoom(state.pawns[pid].room).shell,parseRoom(state.pawns[pid].room).face)}
+ save();render()}
+function drawPawnsButtons(){const panel=$('pawnSelectors');panel.replaceChildren();
+ for(const pid of STARTS){const p=state.pawns[pid],b=document.createElement('button');b.dataset.team=p.team;b.className=(pid===state.selected?'active ':'')+(p.acted?'used':'');
+ b.innerHTML='<b>'+pid+'</b><span class="status">'+(p.attitude==='BUILD'?'✎ BUILD':'◆ DEFEND')+(p.acted?' · used':'')+'</span>';
+ b.addEventListener('click',()=>selectPawn(pid,true));panel.appendChild(b)}
+}
+function render(){
+ draw();const p=currentPawn(),own=ownership(p.room),here=faceForPawn(),s=state.team;
+ $('turn').textContent=teamName(s)+' · Round '+state.round+(state.demoUnlock?' · DEMO':'');
+ $('turnPanel').className='panel team-current-'+s;
+ $('usage').textContent=STARTS.filter(id=>id[0]===s).map(id=>id+(state.pawns[id].acted?' used':' ready')).join(' · ');
+ $('selectedName').textContent=state.selected+' · '+p.room;
+ $('zoom').value=Math.round(camera.zoom*100);$('zoomLabel').textContent=Math.round(camera.zoom*100)+'%';
+ $('viewInfo').textContent=visibleShell==='ALL'?'All shells':{I:'Inner only',M:'Middle only',O:'Outer only'}[visibleShell];
+ for(const b of $('shells').querySelectorAll('button'))b.className=b.dataset.shell===visibleShell?'active':'';
+ $('showRing').checked=showRing;$('demoUnlock').checked=state.demoUnlock;
+ drawPawnsButtons();
+ const busy=!canAct(),details=parseRoom(state.inspected),counts=tally(state.inspected),o=ownership(state.inspected),face=faceById.get(details.face);
+ $('inspectId').textContent=state.inspected;
+ $('roomDetail').textContent=(details.shell==='I'?'Inner':details.shell==='M'?'Middle':'Outer')+' · '+(details.face[0]==='P'?'Pentagon':'Hexagon')+' '+details.face.slice(1)+' · '+(o==='AB'?'Joint A+B':o?teamName(o)+' owned':'Unclaimed')+' · edges Blue '+counts.A+' / Orange '+counts.B+' / neutral '+counts.neutral+(ring.includes(details.face)?' · EQUATOR':'');
+ $('stance').disabled=busy;$('stance').textContent='Change to '+(p.attitude==='BUILD'?'🛡 DEFEND':'✎ BUILD')+' (action)';
+ $('undo').disabled=animation!==null||!undoHistory.length;$('endTurn').disabled=animation!==null;
+ $('message').textContent=notice;
+ const moves=$('destinations');moves.replaceChildren();
+ for(const choice of legalNeighbors()){const b=document.createElement('button');b.className=choice.ok?'legal':'blocked';b.textContent=choice.room+(choice.ok?' ✓':' 🔒');b.title=choice.ok?'Move one room':'Claim your current room first';b.disabled=busy||!choice.ok;b.addEventListener('click',()=>actMove(choice.room));moves.appendChild(b)}
+ const rad=exitStatus();$('radial').disabled=busy||!rad.ok;$('radial').textContent=rad.ok?'⇧ Move outward to '+rad.to:'⇧ Outward passage (locked)';$('exitHint').textContent=rad.why;
+ const edges=$('edgeButtons');edges.replaceChildren();
+ faceById.get(here.face).edges.forEach((key,i)=>{const owner=state.edges[globalEdge(here.shell,key)]||'',b=document.createElement('button');b.className=owner===p.team?'mine':owner?'theirs':'neutral';
+ b.textContent='Edge '+(i+1)+' · '+(owner?teamName(owner):'Neutral');b.disabled=busy||p.attitude!=='BUILD'||owner===p.team||blockedPaint(here.shell,key,p.team);b.addEventListener('click',()=>actEdge(key));edges.appendChild(b)});
+ $('edgeStatus').textContent='Current room '+p.room+' · '+(p.attitude==='BUILD'?'Build ready':'Defending')+' · '+(own?(own==='AB'?'Joint ownership':teamName(own)+' owns'):'must claim before moving');
+ const prog=ringProgress(here.shell,p.team);$('gateStatus').textContent=prog.unlocked?'Unlocked':state.demoUnlock?'DEMO OPEN':'Locked';
+ $('ringProgress').textContent=teamName(p.team)+' '+here.shell+' shell: '+prog.owned+' / '+prog.total+' equator rooms owned · ring '+ring.join(' → ')+(ring.length?' → '+ring[0]:'');
+ const logBox=$('log');logBox.replaceChildren();for(const entry of state.log){const row=document.createElement('div');row.textContent=entry;logBox.appendChild(row)}
+}
+function restoreSaved(){
+ try{const saved=JSON.parse(localStorage.getItem(STORE)||'null');
+  if(!saved||saved.state?.version!==1)return;
+  if(!STARTS.every(pid=>saved.state.pawns?.[pid]&&SHELLS.includes(saved.state.pawns[pid].room[0])&&faceById.has(saved.state.pawns[pid].room.slice(2))))return;
+  state=saved.state;
+  if(saved.camera&&Number.isFinite(saved.camera.zoom)&&saved.camera.zoom>=.4&&saved.camera.zoom<=2.5)camera=saved.camera;
+  if(['ALL',...SHELLS].includes(saved.visibleShell))visibleShell=saved.visibleShell;
+  showRing=saved.showRing!==false;undoHistory=Array.isArray(saved.undoHistory)?saved.undoHistory.slice(-12):[];
+ }catch(e){}
+}
+let dragging=null;
+const stage=$('stage');
+stage.addEventListener('pointerdown',e=>{if(animation)return;dragging={x:e.clientX,y:e.clientY,yaw:camera.yaw,pitch:camera.pitch};try{stage.setPointerCapture(e.pointerId)}catch(_){}});
+stage.addEventListener('pointermove',e=>{if(!dragging||animation)return;camera.yaw=dragging.yaw+(e.clientX-dragging.x)*.009;camera.pitch=Math.max(-1.45,Math.min(1.45,dragging.pitch+(e.clientY-dragging.y)*.009));draw()});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])stage.addEventListener(ev,()=>{if(dragging){dragging=null;save()}});
+$('zoom').addEventListener('input',()=>{camera.zoom=Number($('zoom').value)/100;render();save()});
+$('resetCamera').addEventListener('click',()=>{camera={yaw:-.65,pitch:.36,zoom:camera.zoom,target:[0,0,0]};render();save()});
+for(const b of $('shells').querySelectorAll('button'))b.addEventListener('click',()=>{visibleShell=b.dataset.shell;render();save()});
+$('showRing').addEventListener('change',()=>{showRing=$('showRing').checked;render();save()});
+$('demoUnlock').addEventListener('change',()=>{state.demoUnlock=$('demoUnlock').checked;log(state.demoUnlock?'DEMO UNLOCK ENABLED':'Demo unlock disabled');render();save()});
+$('endTurn').addEventListener('click',endTurn);$('stance').addEventListener('click',actStance);$('undo').addEventListener('click',undo);
+$('focusRoom').addEventListener('click',()=>selectPawn(state.selected,true));$('radial').addEventListener('click',()=>{const exit=exitStatus();if(exit.ok)actMove(exit.to,true);else message(exit.why)});
+for(let i=0;i<12;i++){const o=document.createElement('option');o.value='P'+pad(i);o.textContent='P'+pad(i);$('startPentagon').appendChild(o)}
+$('newGame').addEventListener('click',()=>{if(!confirm('Start a new game and clear all claimed edges?'))return;animCounter++;animation=null;state=blankGame($('startPentagon').value);undoHistory=[];camera.target=[0,0,0];visibleShell='ALL';log('New game starting from '+currentPawn().room);render();save()});
+restoreSaved();notice='Color all five edges of the starting pentagon to claim it. Each pawn has one action each team turn.';render();
+})();
+</script></body></html>
