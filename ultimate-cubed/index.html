@@ -50,4 +50,4 @@ $('rulesToggle').addEventListener('click',()=>{$('rules').hidden=!$('rules').hid
 $('crumbregions').addEventListener('click',()=>{stage='regions';render()});$('crumbboards').addEventListener('click',()=>{stage='boards';render()});
 const saved=load();if(saved){s=saved;$('variant').value=s.variant;$('mode').value=s.mode;notice='Saved match restored on this phone.';autoView();render();if(s.mode==='bot'&&s.turn===2&&!s.winner){const g=generation;botTimer=setTimeout(()=>{botTimer=null;if(g!==generation||s.winner||s.turn!==2)return;const v=aiMove();if(v){apply(s,...v);save();autoView();render()}},250)}}else setup(true);
 })();
-<\/script></body></html>
+</script></body></html>
