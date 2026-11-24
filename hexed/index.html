@@ -101,9 +101,19 @@ function playStages(stages,previous,oldAngle){
   const group=$('board').firstChild;
   if(!group){animating=false;render();return}
   if(step.kind==='turn'){
-   group.style.transformOrigin='300px 300px';
-   group.style.transition='transform 270ms cubic-bezier(.23,.8,.3,1)';
-   requestAnimationFrame(()=>{if(version===runId)group.style.transform='rotate('+(step.delta*60)+'deg)'});
+   // CSS transform overrides SVG's transform attribute. Begin at the board's
+   // absolute orientation, not zero: otherwise subsequent turns make every
+   // fixed stone tile appear to jump, even though its board index never changes.
+   group.style.transformBox='view-box';
+   group.style.transformOrigin='50% 50%';
+   group.style.transform='rotate('+(step.angle*60)+'deg)';
+   group.style.transition='none';
+   requestAnimationFrame(()=>{if(version!==runId)return;
+    // Force Safari to commit the starting rotation before enabling the tween.
+    group.getBoundingClientRect();
+    group.style.transition='transform 270ms cubic-bezier(.23,.8,.3,1)';
+    group.style.transform='rotate('+((step.angle+step.delta)*60)+'deg)';
+   });
   }else if(step.kind==='slide'||step.kind==='fall'){
    const nodes=step.moves.map(([from,to])=>({node:group.children[from],from,to}));
    for(const {node} of nodes)if(node)group.appendChild(node);
