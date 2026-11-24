@@ -15,19 +15,71 @@
 (()=>{'use strict';const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',N=4,SAVE='cube2048-v1',BEST='cube2048-best-v1';
 const idx=(x,y,z)=>x+4*y+16*z,coord=i=>[i%4,Math.floor(i/4)%4,Math.floor(i/16)],dirs=['left','right','up','down','front','back'];
 const palette={2:'#e1f7e6',4:'#b5e9db',8:'#81ddd0',16:'#68c5dd',32:'#7aa9e8',64:'#aaa3f3',128:'#f2bc82',256:'#fcaa73',512:'#fb8c82',1024:'#f378b6',2048:'#ffe37d',4096:'#ffd268'};
-let board=Array(64).fill(0),score=0,best=0,moves=0,undoState=null,won=false,keepGoing=false,gameOver=false,layer=-1,yaw=-.68,pitch=.47,drag=null;
+let board=Array(64).fill(0),score=0,best=0,moves=0,undoState=null,won=false,keepGoing=false,gameOver=false,layer=-1,yaw=-.68,pitch=.47,drag=null,animation=null,animationVersion=0;
 try{best=Number(localStorage.getItem(BEST))||0}catch(e){}
 function store(){try{localStorage.setItem(SAVE,JSON.stringify({board,score,moves,won,keepGoing,gameOver}))}catch(e){}}
 function snapshot(){return{board:board.slice(),score,moves,won,keepGoing,gameOver}}
 function spawn(){const empty=[];for(let i=0;i<64;i++)if(board[i]===0)empty.push(i);if(!empty.length)return -1;const i=empty[Math.floor(Math.random()*empty.length)];board[i]=Math.random()<.9?2:4;return i}
-function fresh(){board=Array(64).fill(0);score=0;moves=0;undoState=null;won=false;keepGoing=false;gameOver=false;spawn();spawn();message('Tilt is optional here: use the six directional controls.');render()}
+function fresh(){animationVersion++;animation=null;board=Array(64).fill(0);score=0;moves=0;undoState=null;won=false;keepGoing=false;gameOver=false;spawn();spawn();message('Tilt is optional here: use the six directional controls.');render()}
 function canMove(b=board){if(b.includes(0))return true;for(let i=0;i<64;i++){const [x,y,z]=coord(i),v=b[i];if(x<3&&b[idx(x+1,y,z)]===v)return true;if(y<3&&b[idx(x,y+1,z)]===v)return true;if(z<3&&b[idx(x,y,z+1)]===v)return true}return false}
 function lines(direction){let all=[];for(let a=0;a<4;a++)for(let b=0;b<4;b++){let line=[];for(let t=0;t<4;t++){let x,y,z;if(direction==='left'||direction==='right'){x=direction==='left'?t:3-t;y=a;z=b}else if(direction==='up'||direction==='down'){x=a;y=direction==='up'?t:3-t;z=b}else{x=a;y=b;z=direction==='front'?t:3-t}line.push(idx(x,y,z))}all.push(line)}return all}
 function compute(direction,input=board){const out=Array(64).fill(0);let points=0,changed=false,merges=0;for(const line of lines(direction)){let vals=line.map(i=>input[i]).filter(Boolean),result=[];for(let k=0;k<vals.length;k++){if(k+1<vals.length&&vals[k]===vals[k+1]){result.push(vals[k]*2);points+=vals[k]*2;merges++;k++}else result.push(vals[k])}for(let j=0;j<4;j++){let v=result[j]||0;out[line[j]]=v;if(v!==input[line[j]])changed=true}}return{board:out,points,changed,merges}}
 function message(s){$('notice').textContent=s}
-function restore(s){board=s.board.slice();score=s.score;moves=s.moves;won=s.won;keepGoing=s.keepGoing;gameOver=s.gameOver;render()}
-function move(direction){if(gameOver||won&&!keepGoing)return false;const n=compute(direction);if(!n.changed)return false;undoState=snapshot();board=n.board;score+=n.points;moves++;best=Math.max(score,best);spawn();if(!won&&board.includes(2048)){won=true;message('🏆 2048 reached in 3D! Keep playing to go higher.')}else if(!canMove()){gameOver=true;message('No moves left. Undo or start a new game.')}else message((n.merges?'✨ '+n.merges+' merge'+(n.merges===1?'':'s')+' · +'+n.points+' points':'Cubes slid '+direction+'.'));try{localStorage.setItem(BEST,String(best))}catch(e){}store();render();return true}
-function undo(){if(!undoState)return;const prior=undoState;undoState=null;restore(prior);store();message('Last move undone.')}
+function restore(s){animationVersion++;animation=null;board=s.board.slice();score=s.score;moves=s.moves;won=s.won;keepGoing=s.keepGoing;gameOver=s.gameOver;render()}
+
+function trajectories(direction,input=board){
+ const travel=[],bursts=[];
+ for(const indices of lines(direction)){
+  const units=indices.filter(i=>input[i]).map(i=>({index:i,value:input[i]}));
+  let slot=0;
+  for(let k=0;k<units.length;k++){
+   const a=units[k],b=units[k+1],to=indices[slot++];
+   if(b&&a.value===b.value){
+    travel.push({from:a.index,to,value:a.value},{from:b.index,to,value:b.value});
+    bursts.push({index:to,value:a.value*2});k++;
+   }else travel.push({from:a.index,to,value:a.value});
+  }
+ }
+ return{travel,bursts};
+}
+function finishMove(version,direction,plan){
+ if(version!==animationVersion)return;
+ animation=null;board=plan.board;score+=plan.points;moves++;best=Math.max(score,best);spawn();
+ if(!won&&board.some(v=>v>=2048)){won=true;message('🏆 You reached 2048 in 3D!')}
+ else if(!canMove()){gameOver=true;message('No moves left. Undo or start a new game.')}
+ else message(plan.merges?'✨ '+plan.merges+' merge'+(plan.merges===1?'':'s')+' · +'+plan.points+' points':'Cubes slid '+direction+'.');
+ try{localStorage.setItem(BEST,String(best))}catch(e){}
+ store();render();
+}
+function move(direction){
+ if(animation||gameOver||won&&!keepGoing)return false;
+ const plan=compute(direction);if(!plan.changed)return false;
+ undoState=snapshot();
+ const version=++animationVersion;
+ animation={phase:'travel',progress:0,paths:trajectories(direction),direction};
+ message('Sliding '+direction+'…');render();
+ const start=performance.now();
+ function travelFrame(t){
+  if(version!==animationVersion)return;
+  const fraction=Math.min(1,(t-start)/290);
+  animation.progress=1-Math.pow(1-fraction,3);
+  draw();
+  if(fraction<1){requestAnimationFrame(travelFrame);return}
+  animation.phase='burst';animation.progress=0;
+  const popStart=performance.now();
+  function burstFrame(now){
+   if(version!==animationVersion)return;
+   animation.progress=Math.min(1,(now-popStart)/235);
+   draw();
+   if(animation.progress<1)requestAnimationFrame(burstFrame);
+   else finishMove(version,direction,plan);
+  }
+  requestAnimationFrame(burstFrame);
+ }
+ requestAnimationFrame(travelFrame);
+ return true;
+}
+function undo(){if(!undoState||animation)return;const prior=undoState;undoState=null;restore(prior);store();message('Last move undone.')}
 function svgNode(tag,attrs,parent=$('cube')){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);parent.appendChild(n);return n}
 function rotate3(p){const a=yaw,b=pitch;const x=p[0]*Math.cos(a)+p[2]*Math.sin(a),z=-p[0]*Math.sin(a)+p[2]*Math.cos(a),y=p[1]*Math.cos(b)-z*Math.sin(b),depth=p[1]*Math.sin(b)+z*Math.cos(b);return[x,y,depth]}
 function project(p){const [x,y,z]=rotate3(p);return[300+x*69,278+y*69,z]}
@@ -35,7 +87,7 @@ function line(a,b,stroke='#7da1ba',opacity=.2,w=1){const p=project(a),q=project(
 const cubeCorners=(cx,cy,cz,r=.43)=>[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]].map(([x,y,z])=>[cx+x*r,cy+y*r,cz+z*r]);
 const faces=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[3,2,6,7],[0,3,7,4],[1,2,6,5]];
 function tileColor(v){return palette[v]||'#ffe077'}
-function drawTile(i,v){const [x,y,z]=coord(i),cx=x-1.5,cy=y-1.5,cz=z-1.5,vertices=cubeCorners(cx,cy,cz);const projected=vertices.map(project),center=project([cx,cy,cz]),color=tileColor(v);
+function drawTile(i,v,at=null){const [x,y,z]=at||coord(i),cx=x-1.5,cy=y-1.5,cz=z-1.5,vertices=cubeCorners(cx,cy,cz);const projected=vertices.map(project),center=project([cx,cy,cz]),color=tileColor(v);
 const faceData=faces.map(ids=>{const a=rotate3(vertices[ids[0]]),b=rotate3(vertices[ids[1]]),c=rotate3(vertices[ids[2]]);const ux=b[0]-a[0],uy=b[1]-a[1],vx=c[0]-a[0],vy=c[1]-a[1],cross=ux*vy-uy*vx;return{ids,depth:ids.reduce((s,k)=>s+projected[k][2],0)/4,cross}}).sort((a,b)=>a.depth-b.depth);
 for(const face of faceData){const pts=face.ids.map(k=>projected[k][0].toFixed(1)+','+projected[k][1].toFixed(1)).join(' ');svgNode('polygon',{points:pts,fill:color,opacity:face.cross>0?'.9':'.7',stroke:'#d7f3ff','stroke-opacity':'.58','stroke-width':1.4})}
 const fs=v>=1024?14:v>=128?18:23;svgNode('rect',{x:center[0]-30,y:center[1]-16,width:60,height:32,rx:10,fill:'#122c42','fill-opacity':'.82',stroke:'#c8e7f2','stroke-opacity':'.5'});
@@ -53,9 +105,9 @@ function draw(){const svg=$('cube');svg.replaceChildren();
  const axes=[['X',[2.45,-2,-2],'#96f5cf'],['Y',[-2,2.45,-2],'#ffda8a'],['Z',[-2,-2,2.45],'#cdb0ff']];for(const [name,p,color] of axes){const at=project(p),t=svgNode('text',{x:at[0],y:at[1],fill:color,'font-size':17,'font-weight':900,'text-anchor':'middle'});t.textContent=name}
  $('visible').textContent=layer<0?'All 4 layers':'Depth layer '+(layer+1);
 }
-function render(){draw();$('score').textContent=score;$('best').textContent=best;$('moves').textContent=moves;$('undo').disabled=!undoState;$('continue').hidden=!won||keepGoing;$('badge').textContent=gameOver?'No moves':won&&!keepGoing?'Reached 2048!':board.filter(Boolean).length+' / 64 cells';
+function render(){draw();$('score').textContent=score;$('best').textContent=best;$('moves').textContent=moves;$('undo').disabled=!undoState||!!animation;$('continue').hidden=!won||keepGoing;$('badge').textContent=gameOver?'No moves':won&&!keepGoing?'Reached 2048!':board.filter(Boolean).length+' / 64 cells';
  $('layers').replaceChildren();for(let i=-1;i<4;i++){const btn=document.createElement('button');btn.textContent=i<0?'All':String(i+1);btn.className=layer===i?'active':'';btn.setAttribute('aria-label',i<0?'Show all layers':'Show depth layer '+(i+1));btn.addEventListener('click',()=>{layer=i;render()});$('layers').appendChild(btn)}}
-for(const d of dirs)$(d).addEventListener('click',()=>move(d));$('undo').addEventListener('click',undo);$('restart').addEventListener('click',()=>{if(moves&&!gameOver&&!confirm('Start over?'))return;fresh()});$('continue').addEventListener('click',()=>{keepGoing=true;store();render();message('Keep going! Make an even bigger cube.')});$('resetView').addEventListener('click',()=>{yaw=-.68;pitch=.47;layer=-1;render()});
+for(const d of dirs)$(d).addEventListener('click',()=>move(d));$('undo').addEventListener('click',undo);$('restart').addEventListener('click',()=>{if(animation)return;if(moves&&!gameOver&&!confirm('Start over?'))return;fresh()});$('continue').addEventListener('click',()=>{keepGoing=true;store();render();message('Keep going! Make an even bigger cube.')});$('resetView').addEventListener('click',()=>{yaw=-.68;pitch=.47;layer=-1;render()});
 const target=$('stage');target.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw,pitch};try{target.setPointerCapture(e.pointerId)}catch(_){}});
 target.addEventListener('pointermove',e=>{if(!drag)return;yaw=drag.yaw+(e.clientX-drag.x)*.012;pitch=Math.max(-1.25,Math.min(1.25,drag.pitch+(e.clientY-drag.y)*.012));draw()});for(const ev of ['pointerup','pointercancel','lostpointercapture'])target.addEventListener(ev,()=>{drag=null});
 document.addEventListener('keydown',e=>{const keys={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',q:'front',Q:'front',e:'back',E:'back'};if(keys[e.key]){e.preventDefault();move(keys[e.key])}});
