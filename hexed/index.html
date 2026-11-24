@@ -8,29 +8,30 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',D=[[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]],COLORS=['','#ff7b99','#6fd9fa','#ffd479','#b59aff','#8cf0b2'];
 const LEVELS=[
- {name:'The First Twist',board:'2000000200000100001',par:2},
- {name:'Crossing Streams',board:'0010000010000200002',par:2},
- {name:'Double Down',board:'2000100000001002000',par:3},
- {name:'Loop the Corner',board:'0201000002000000001',par:3},
- {name:'One Last Nudge',board:'0100000000000002210',par:3}
+{name:'First Supports',board:'9900000200019002001',par:2},
+{name:'Stone Crossing',board:'9000002002910090010',par:2},
+{name:'Double Drop',board:'3900200009010002130',par:3},
+{name:'Over the Wall',board:'1000900009020200190',par:3},
+{name:'A Hard Landing',board:'0009000090211293390',par:4}
 ];
 const R=2,pts=[],pos=new Map();for(let r=-R;r<=R;r++)for(let q=-R;q<=R;q++)if(Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))<=R){const id=pts.length;pts.push([q,r]);pos.set(q+','+r,id)}
 const adjacent=pts.map(([q,r])=>D.map(([dx,dy])=>pos.get((q+dx)+','+(r+dy))??-1));
 const gravityOrder=D.map(([dq,dr])=>pts.map((p,i)=>({i,s:p[0]*(2*dq+dr)+p[1]*(dq+2*dr)})).sort((a,b)=>b.s-a.s).map(o=>o.i));
 let level=0,board=[],orientation=0,moves=0,selected=-1,history=[],finished=false,notice='',bestRecords={},procedural=null,animating=false,runId=0;
 try{bestRecords=JSON.parse(localStorage.getItem('hexed-best-v1')||'{}')||{}}catch(e){bestRecords={}}
-function removeMatches(input){let out=input.slice(),seen=new Set(),removed=0;for(let i=0;i<input.length;i++){if(!input[i]||seen.has(i))continue;let stack=[i],group=[];seen.add(i);while(stack.length){let u=stack.pop();group.push(u);for(let j of adjacent[u])if(j>=0&&input[j]===input[i]&&!seen.has(j)){seen.add(j);stack.push(j)}}if(group.length>1){removed+=group.length;for(let id of group)out[id]=0}}return{board:out,removed}}
-function gravity(input,direction){const out=input.slice();for(let sweep=0;sweep<pts.length;sweep++){let shifted=false;for(let i of gravityOrder[direction]){const j=adjacent[i][direction];if(out[i]&&j>=0&&!out[j]){out[j]=out[i];out[i]=0;shifted=true}}if(!shifted)break}return out}
-function transition(state,move){let [input,angle]=state;if(move[0]==='slide'){let [_,from,to]=move;if(!input[from]||input[to]||!adjacent[from].includes(to))return null;let b=input.slice();b[to]=b[from];b[from]=0;return[removeMatches(b).board,angle]}let next=(angle+move[1]+6)%6;let b=gravity(input,(1-next+6)%6);for(let k=0;k<20;k++){const result=removeMatches(b);if(!result.removed)break;b=gravity(result.board,(1-next+6)%6)}return[b,next]}
-function possible(state){let b=state[0],out=[];for(let i=0;i<b.length;i++)if(b[i])for(let j of adjacent[i])if(j>=0&&!b[j])out.push(['slide',i,j]);out.push(['turn',1],['turn',-1]);return out}
-function solve(initial,maxDepth=7,budget=60000){let queue=[{state:initial,path:[]}],seen=new Set([initial[0].join('')+'|'+initial[1]]);for(let h=0;h<queue.length&&queue.length<budget;h++){const item=queue[h];if(item.state[0].every(v=>!v))return item.path;if(item.path.length>=maxDepth)continue;for(const move of possible(item.state)){const next=transition(item.state,move),k=next[0].join('')+'|'+next[1];if(seen.has(k))continue;seen.add(k);queue.push({state:next,path:[...item.path,move]})}}return null}
+function removeMatches(input){let out=input.slice(),seen=new Set(),removed=0;for(let i=0;i<input.length;i++){if(!input[i]||input[i]===9||seen.has(i))continue;let stack=[i],group=[];seen.add(i);while(stack.length){let u=stack.pop();group.push(u);for(let j of adjacent[u])if(j>=0&&input[j]===input[i]&&!seen.has(j)){seen.add(j);stack.push(j)}}if(group.length>1){removed+=group.length;for(let id of group)out[id]=0}}return{board:out,removed}}
+function gravity(input,direction){const out=input.slice();for(let sweep=0;sweep<pts.length;sweep++){let shifted=false;for(let i of gravityOrder[direction]){const j=adjacent[i][direction];if(out[i]>0&&out[i]<9&&j>=0&&!out[j]){out[j]=out[i];out[i]=0;shifted=true}}if(!shifted)break}return out}
+function settle(input,direction){let b=gravity(input,direction);for(let k=0;k<pts.length;k++){const result=removeMatches(b);if(!result.removed)break;b=gravity(result.board,direction)}return b}
+function transition(state,move){let [input,angle]=state,b=input.slice(),next=angle;if(move[0]==='slide'){const [_,from,to]=move;if(!(b[from]>0&&b[from]<9)||b[to]!==0||!adjacent[from].includes(to))return null;b[to]=b[from];b[from]=0}else next=(angle+move[1]+6)%6;return[settle(b,(1-next+6)%6),next]}
+function possible(state){let b=state[0],out=[];for(let i=0;i<b.length;i++)if(b[i]>0&&b[i]<9)for(let j of adjacent[i])if(j>=0&&!b[j])out.push(['slide',i,j]);out.push(['turn',1],['turn',-1]);return out}
+function solve(initial,maxDepth=7,budget=60000){let queue=[{state:initial,path:[]}],seen=new Set([initial[0].join('')+'|'+initial[1]]);for(let h=0;h<queue.length&&queue.length<budget;h++){const item=queue[h];if(item.state[0].every(v=>v===0||v===9))return item.path;if(item.path.length>=maxDepth)continue;for(const move of possible(item.state)){const next=transition(item.state,move),k=next[0].join('')+'|'+next[1];if(seen.has(k))continue;seen.add(k);queue.push({state:next,path:[...item.path,move]})}}return null}
 function currentLevel(){return level<LEVELS.length?LEVELS[level]:procedural}
 function stopAnimation(){runId++;animating=false}
 function restart(){stopAnimation();board=currentLevel().board.split('').map(Number);orientation=0;moves=0;selected=-1;finished=false;history=[];notice='Move a block, then rotate to bring matching colors together.';render()}
 function setLevel(id){level=Math.max(0,Math.min(id,LEVELS.length-1));restart()}
 function record(){history.push({board:board.slice(),orientation,moves,selected,finished,notice})}
 function act(move){if(finished||animating)return;const next=transition([board,orientation],move);if(!next)return;const oldBoard=board.slice(),oldAngle=orientation;record();[board,orientation]=next;moves++;selected=-1;const removed=oldBoard.filter(Boolean).length-board.filter(Boolean).length;notice=removed?'✨ '+removed+' blocks vanished!':move[0]==='slide'?'Block moved.':'Gravity changed!';
-if(board.every(v=>!v)){finished=true;notice='🎉 HEXED! Puzzle solved in '+moves+' moves!';let k=level===LEVELS.length?'seed-'+procedural.seed:level,old=bestRecords[k];if(old===undefined||moves<old){bestRecords[k]=moves;try{localStorage.setItem('hexed-best-v1',JSON.stringify(bestRecords))}catch(e){}}}render();if(move[0]==='turn')animateTurn(oldBoard,oldAngle,move[1]);else if(move[0]==='slide')animateSlide(oldBoard,oldAngle,move[1],move[2])}
+if(board.every(v=>v===0||v===9)){finished=true;notice='🎉 HEXED! Puzzle solved in '+moves+' moves!';let k=level===LEVELS.length?'seed-'+procedural.seed:level,old=bestRecords[k];if(old===undefined||moves<old){bestRecords[k]=moves;try{localStorage.setItem('hexed-best-v1',JSON.stringify(bestRecords))}catch(e){}}}render();if(move[0]==='turn')animateTurn(oldBoard,oldAngle,move[1]);else if(move[0]==='slide')animateSlide(oldBoard,oldAngle,move[1],move[2])}
 function select(i){if(finished||animating)return;if(selected>=0&&board[selected]&&!board[i]&&adjacent[selected].includes(i)){act(['slide',selected,i]);return}if(board[i]){selected=selected===i?-1:i;notice=selected<0?'Selection cleared.':'Choose a neighboring empty hex to slide into.'}else{selected=-1;notice='Select a colored hex first, then a neighboring empty space.'}render()}
 function make(tag,attrs,parent=$('board')){let e=document.createElementNS(NS,tag);for(let k in attrs)e.setAttribute(k,attrs[k]);parent.appendChild(e);return e}
 function lockAnimationControls(){for(const id of ['undo','cw','ccw','generate','previous','next','hint','resetSelection'])$(id).disabled=true}
