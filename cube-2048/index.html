@@ -152,10 +152,14 @@ function draw(){const svg=$('cube');svg.replaceChildren();
   function directionArrow(t,sign){
    const head=point(t),tail=point(t-sign*.14);
    const angle=Math.atan2(head[1]-tail[1],head[0]-tail[0]);
-   svgNode('polygon',{points:[head,
-    [head[0]-13*Math.cos(angle)+6*Math.sin(angle),head[1]-13*Math.sin(angle)-6*Math.cos(angle)],
-    [head[0]-13*Math.cos(angle)-6*Math.sin(angle),head[1]-13*Math.sin(angle)+6*Math.cos(angle)]
-   ].map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '),fill:axis.color,stroke:'#10283a','stroke-width':1});
+   // project() returns [screenX, screenY, depth]. SVG polygon points
+   // must contain exactly TWO coordinates per vertex; passing the depth as a
+   // third coordinate made giant triangular spikes across the display.
+   const tip=[head[0],head[1]];
+   const wing1=[head[0]-12*Math.cos(angle)+5*Math.sin(angle),head[1]-12*Math.sin(angle)-5*Math.cos(angle)];
+   const wing2=[head[0]-12*Math.cos(angle)-5*Math.sin(angle),head[1]-12*Math.sin(angle)+5*Math.cos(angle)];
+   svgNode('polygon',{points:[tip,wing1,wing2].map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '),
+    fill:axis.color,stroke:'#10283a','stroke-width':1});
    const labelPoint=point(t),label=svgNode('text',{
     x:labelPoint[0]+nx*19,y:labelPoint[1]+ny*19+4,
     'text-anchor':'middle','font-size':15,'font-weight':900,
