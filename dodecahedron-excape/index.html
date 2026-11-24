@@ -13,7 +13,7 @@
 <div class="footer"><a href="../">Back to Garmise Game Arcade</a> · Original geometry and rules prototype</div>
 </main><script>
 (()=>{'use strict';
-const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',SHELLS=['I','M','O'],RADII={I:1,M:1.42,O:1.84},TEAM_COLOR={A:'#57b6ff',B:'#ffab61'},STARTS=['A1','A2','B1','B2'],STORE='excape-board-v1',TAU=2*Math.PI;
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',SHELLS=['I','M','O'],RADII={I:1,M:1.42,O:1.84},TEAM_COLOR={A:'#57b6ff',B:'#ffab61'},PAWN_COLOR={A1:'#57b6ff',A2:'#91e7ff',B1:'#ffab61',B2:'#ff8478'},STARTS=['A1','A2','B1','B2'],STORE='excape-board-v1',TAU=2*Math.PI;
 const phi=(1+Math.sqrt(5))/2,verts=[];
 for(const s of [-1,1])for(const t of [-1,1])verts.push([0,s,t*phi]);
 for(const s of [-1,1])for(const t of [-1,1])verts.push([s,t*phi,0]);
@@ -149,7 +149,7 @@ function pawnWorld(pid,room){const p=state.pawns[pid],{shell,face}=parseRoom(roo
  return add(scale(center,1.15),scale(offset,RADII[shell]*.7));
 }
 function drawPawn(pid,at){
- const pawn=state.pawns[pid],center=project(at),selected=state.selected===pid,team=TEAM_COLOR[pawn.team],p=animation?.player===pid;
+ const pawn=state.pawns[pid],center=project(at),selected=state.selected===pid,team=PAWN_COLOR[pid],p=animation?.player===pid;
  const g=node('g',{style:'cursor:pointer',opacity:1});
  if(selected)node('circle',{cx:center[0],cy:center[1],r:24,fill:team,'fill-opacity':.11,stroke:'#fff4a8','stroke-width':2.6},g);
  node('circle',{cx:center[0],cy:center[1]-7,r:12,fill:team,stroke:'#e7faff','stroke-width':2},g);
