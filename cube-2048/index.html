@@ -138,7 +138,14 @@ function draw(){const svg=$('cube');svg.replaceChildren();
   const start=point(0),end=point(1),center=point(.5);
   // Offset labels away from the line in the CURRENT projection.
   const dx=end[0]-start[0],dy=end[1]-start[1],length=Math.hypot(dx,dy);
-  if(length<.01)continue;
+  if(length<18){
+   // When looking directly along an axis, its projected length is zero.
+   // A depth marker at the TRUE common corner is more honest than a fake arrow.
+   svgNode('circle',{cx:start[0],cy:start[1],r:13,fill:'#142d44',stroke:axis.color,'stroke-width':2.5});
+   const marker=svgNode('text',{x:start[0],y:start[1]+4,'text-anchor':'middle','font-size':10,'font-weight':900,fill:axis.color});
+   marker.textContent=axis.name+'⊙';
+   continue;
+  }
   const nx=-dy/length,ny=dx/length;
   svgNode('line',{x1:start[0],y1:start[1],x2:end[0],y2:end[1],
    stroke:axis.color,'stroke-width':5,'stroke-linecap':'round',opacity:.98});
@@ -156,6 +163,10 @@ function draw(){const svg=$('cube');svg.replaceChildren();
    });label.textContent=axis.name+(sign===1?'+':'−');
   }
   directionArrow(.24,-1);directionArrow(.76,1);
+  const axisName=svgNode('text',{x:center[0]-nx*17,y:center[1]-ny*17+5,
+    'text-anchor':'middle','font-size':16,'font-weight':900,fill:axis.color,
+    'paint-order':'stroke',stroke:'#081827','stroke-width':4});
+  axisName.textContent=axis.name;
  }
  $('visible').textContent=layer<0?'All 4 layers':'Depth layer '+(layer+1);
 }
