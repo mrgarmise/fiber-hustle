@@ -33,8 +33,9 @@ function act(move){if(finished||animating)return;const next=transition([board,or
 if(board.every(v=>!v)){finished=true;notice='🎉 HEXED! Puzzle solved in '+moves+' moves!';let k=level===LEVELS.length?'seed-'+procedural.seed:level,old=bestRecords[k];if(old===undefined||moves<old){bestRecords[k]=moves;try{localStorage.setItem('hexed-best-v1',JSON.stringify(bestRecords))}catch(e){}}}render();if(move[0]==='turn')animateTurn(oldBoard,oldAngle,move[1]);else if(move[0]==='slide')animateSlide(oldBoard,oldAngle,move[1],move[2])}
 function select(i){if(finished||animating)return;if(selected>=0&&board[selected]&&!board[i]&&adjacent[selected].includes(i)){act(['slide',selected,i]);return}if(board[i]){selected=selected===i?-1:i;notice=selected<0?'Selection cleared.':'Choose a neighboring empty hex to slide into.'}else{selected=-1;notice='Select a colored hex first, then a neighboring empty space.'}render()}
 function make(tag,attrs,parent=$('board')){let e=document.createElementNS(NS,tag);for(let k in attrs)e.setAttribute(k,attrs[k]);parent.appendChild(e);return e}
+function lockAnimationControls(){for(const id of ['undo','cw','ccw','generate','previous','next','hint','resetSelection'])$(id).disabled=true}
 function animateTurn(previous,angle,direction){
- const version=++runId;animating=true;draw(previous,angle);
+ const version=++runId;animating=true;draw(previous,angle);lockAnimationControls();
  const group=$('board').firstChild;
  if(!group){animating=false;render();return}
  group.style.transformOrigin='300px 300px';
@@ -44,7 +45,7 @@ function animateTurn(previous,angle,direction){
 }
 function animateSlide(previous,angle,from,to){
  const version=++runId;animating=true;
- draw(previous,angle);
+ draw(previous,angle);lockAnimationControls();
  const group=$('board').firstChild;
  const tile=group?.children[from];
  if(!tile){animating=false;render();return}
